@@ -8,6 +8,7 @@ InputT  = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
 
 CONFIDENCE_THRESHOLD = 0.5
+# Retries after the first attempt; total attempts = MAX_PARSE_RETRIES + 1
 MAX_PARSE_RETRIES = 2
 
 
@@ -18,6 +19,7 @@ class BaseAgent(ABC, Generic[InputT, OutputT]):
         self.last_needs_human: bool = False
 
     def run(self, input: InputT, *, cached_prefix: list[LLMMessage] | None = None) -> OutputT:
+        self.last_needs_human = False
         messages = self.build_messages(input)
         last_error: Exception | None = None
 
