@@ -48,5 +48,6 @@ models:
       max_tokens: 2048
 
 api_keys:
+  # Values starting with ${...} are resolved from environment variables at load time
   anthropic: ${ANTHROPIC_API_KEY}
   openai: ${OPENAI_API_KEY}
