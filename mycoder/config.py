@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 import yaml
@@ -45,7 +46,15 @@ def _parse_model_config(data: dict) -> ModelConfig:
 def _resolve_env_vars(value: str) -> str:
     if value.startswith("${") and value.endswith("}"):
         var = value[2:-1]
-        return os.environ.get(var, "")
+        resolved = os.environ.get(var)
+        if resolved is None:
+            warnings.warn(
+                f"Environment variable '{var}' is not set. API key will be empty.",
+                UserWarning,
+                stacklevel=3,
+            )
+            return ""
+        return resolved
     return value
 
 
@@ -55,9 +64,21 @@ def load_config(path: Path | str = "config.yaml") -> Config:
 
     m = raw["models"]
 
+    required_sections = ["planner", "generator", "verifier", "reviewers", "aggregator"]
+    for section in required_sections:
+        if section not in m:
+            raise ValueError(
+                f"config.yaml is missing required section: models.{section}"
+            )
+
     generator: dict[str, ModelConfig] = {}
     for key, val in m["generator"].items():
         generator[key] = _parse_model_config(val)
+
+    if "default" not in generator:
+        raise ValueError(
+            "config.yaml is missing required section: models.generator.default"
+        )
 
     reviewers: dict[str, ModelConfig] = {}
     for key, val in m["reviewers"].items():
