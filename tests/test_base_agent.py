@@ -11,6 +11,7 @@ from mycoder.llm.client import LLMResponse
 class EchoOutput(BaseModel):
     message: str
     confidence: float
+    needs_human: bool = False
 
 
 class EchoAgent(BaseAgent[str, EchoOutput]):
@@ -46,16 +47,26 @@ def test_agent_run_returns_output(agent):
         assert output.confidence == 0.9
 
 
-def test_agent_triggers_needs_human_on_low_confidence(agent):
+def test_agent_sets_needs_human_when_output_requests_it(agent):
     mock_response = LLMResponse(
-        content='{"message": "unsure", "confidence": 0.3}',
+        content='{"message": "unsure", "confidence": 0.3, "needs_human": true}',
         model="claude-haiku-4-5",
         usage={"prompt_tokens": 5, "completion_tokens": 10},
     )
     with patch.object(agent.client, "call", return_value=mock_response):
         output = agent.run("ambiguous input")
-        assert output.confidence == 0.3
         assert agent.last_needs_human is True
+
+
+def test_agent_low_confidence_alone_does_not_set_needs_human(agent):
+    mock_response = LLMResponse(
+        content='{"message": "unsure", "confidence": 0.3, "needs_human": false}',
+        model="claude-haiku-4-5",
+        usage={"prompt_tokens": 5, "completion_tokens": 10},
+    )
+    with patch.object(agent.client, "call", return_value=mock_response):
+        agent.run("low confidence")
+        assert agent.last_needs_human is False
 
 
 def test_agent_run_retries_on_parse_failure(agent):
@@ -90,9 +101,9 @@ def test_agent_raises_after_max_retries(agent):
             agent.run("always fails")
 
 
-def test_agent_last_needs_human_false_on_high_confidence(agent):
+def test_agent_last_needs_human_false_when_not_requested(agent):
     mock_response = LLMResponse(
-        content='{"message": "confident", "confidence": 0.9}',
+        content='{"message": "confident", "confidence": 0.9, "needs_human": false}',
         model="claude-haiku-4-5",
         usage={"prompt_tokens": 5, "completion_tokens": 10},
     )

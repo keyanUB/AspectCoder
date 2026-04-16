@@ -7,7 +7,6 @@ from mycoder.llm.client import LLMClient, LLMMessage
 InputT  = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
 
-CONFIDENCE_THRESHOLD = 0.5
 # Retries after the first attempt; total attempts = MAX_PARSE_RETRIES + 1
 MAX_PARSE_RETRIES = 2
 
@@ -27,11 +26,7 @@ class BaseAgent(ABC, Generic[InputT, OutputT]):
             response = self.client.call(messages, cached_prefix=cached_prefix)
             try:
                 output = self.parse_output(response.content)
-                confidence = getattr(output, "confidence", 1.0)
-                self.last_needs_human = (
-                    confidence < CONFIDENCE_THRESHOLD
-                    or getattr(output, "needs_human", False)
-                )
+                self.last_needs_human = getattr(output, "needs_human", False)
                 return output
             except Exception as e:
                 last_error = e

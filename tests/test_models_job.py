@@ -18,7 +18,7 @@ def test_job_state_defaults():
         created_at=now,
         updated_at=now,
     )
-    assert state.planner_retries == 0
+    assert state.verifier_retries == 0
     assert state.regen_retries == 0
     assert state.replan_retries == 0
 
