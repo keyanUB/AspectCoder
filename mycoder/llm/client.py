@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import litellm
 from mycoder.config import ModelConfig
 
@@ -49,8 +49,8 @@ class LLMClient:
             content=result.choices[0].message.content,
             model=result.model,
             usage={
-                "prompt_tokens": result.usage.prompt_tokens,
-                "completion_tokens": result.usage.completion_tokens,
+                "prompt_tokens": result.usage.prompt_tokens or 0,
+                "completion_tokens": result.usage.completion_tokens or 0,
             },
         )
 

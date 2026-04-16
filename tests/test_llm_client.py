@@ -47,3 +47,8 @@ def test_call_applies_cache_prefix(client):
         call_kwargs = mock_call.call_args
         messages_sent = call_kwargs[1]["messages"]
         assert len(messages_sent) == 2
+        # Cached prefix is prepended — index 0 is the cached message
+        assert messages_sent[0]["content"][0]["cache_control"] == {"type": "ephemeral"}
+        assert messages_sent[0]["content"][0]["text"] == "Cached context"
+        # Dynamic message is a plain string, not wrapped in a content block
+        assert messages_sent[1]["content"] == "New question"
