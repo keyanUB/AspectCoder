@@ -28,18 +28,20 @@ Task description
   Generator
       │
       ▼
+  Reviewers
   ┌─────────────────────────────────────────┐
-  │  Functional reviewer  (parallel)        │
-  │  Security reviewer  ◄── CWE Top 25 /   │
+  │  Functional reviewer                    │
+  │  Parallel:                              |
+  |   Security reviewer  ◄── CWE Top 25 +   │
   │                         OWASP SCP       │
-  │  Performance reviewer                   │
+  │   Performance reviewer                  │
   └─────────────────────────────────────────┘
       │
       ▼
   Aggregator ──► DONE / REGEN / REPLAN / HUMAN
       │
       ▼
- Generated files written to project directory
+ Generated files written to the project directory
 ```
 
 Each cycle either accepts the output, asks the generator to fix specific issues, replans from scratch, or escalates to you when human judgment is required.
