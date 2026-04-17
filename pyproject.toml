@@ -31,9 +31,9 @@ dependencies = [
 aspectcoder = "aspectcoder.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/keyanguo/AspectCoder"
-Repository = "https://github.com/keyanguo/AspectCoder"
-"Bug Tracker" = "https://github.com/keyanguo/AspectCoder/issues"
+Homepage = "https://github.com/keyanUB/AspectCoder"
+Repository = "https://github.com/keyanUB/AspectCoder"
+"Bug Tracker" = "https://github.com/keyanUB/AspectCoder/issues"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
