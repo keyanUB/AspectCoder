@@ -19,39 +19,39 @@ AspectCoder wraps generation in a structured multi-agent review loop. A dedicate
 ## How it works
 
 ```
- Task description
-       │
-       ▼
-   Planner ◄─────────────────────────────────┐
-       │                                      │
-       ▼                                      │
- PlanVerifier ── reject ──► (replan, max 3)  │
-       │ approve                              │
-       ▼                                      │
-   Generator ◄── retry feedback ─────────┐   │
-       │                                  │   │
-       ▼                                  │   │
-  ┌────────────────────────────────────┐  │   │
-  │  Functional reviewer               │  │   │
-  │        │ pass                      │  │   │
-  │        ▼                           │  │   │
-  │  ┌─────────────────────────────┐   │  │   │
-  │  │ Security reviewer (parallel) │  │  │   │
-  │  │  ◄── CWE Top 25 / OWASP SCP │  │  │   │
-  │  │ Performance reviewer         │  │  │   │
-  │  └─────────────────────────────┘   │  │   │
-  └────────────────────────────────────┘  │   │
-       │                                  │   │
-       ▼                                  │   │
-   Aggregator                             │   │
-       ├── REGEN ───────────────────────┘   │
-       ├── REPLAN ──────────────────────────┘
-       ├── HUMAN  ──► escalate to user
-       └── DONE
-             │
-             ▼
-  Generated files + per-attempt snapshots
-  written to project directory
+  Task description
+        │
+        ▼
+    Planner ◄──────────────────────────────────────┐
+        │                                           │
+        ▼                                           │
+  PlanVerifier ── reject ──► (replan, max 3)       │
+        │ approve                                   │
+        ▼                                           │
+    Generator ◄── retry feedback ──────────────┐   │
+        │                                       │   │
+        ▼                                       │   │
+  ┌─────────────────────────────────────────┐   │   │
+  │  Functional reviewer                    │   │   │
+  │            │ pass                       │   │   │
+  │            ▼                            │   │   │
+  │  ┌──────────────────────────────────┐   │   │   │
+  │  │  Security reviewer   (parallel)  │   │   │   │
+  │  │    ◄── CWE Top 25 / OWASP SCP   │   │   │   │
+  │  │  Performance reviewer            │   │   │   │
+  │  └──────────────────────────────────┘   │   │   │
+  └─────────────────────────────────────────┘   │   │
+        │                                       │   │
+        ▼                                       │   │
+    Aggregator                                  │   │
+        ├── REGEN  ──────────────────────────┘   │
+        ├── REPLAN ──────────────────────────────┘
+        ├── HUMAN  ──► escalate to user
+        └── DONE
+              │
+              ▼
+    Generated files + per-attempt snapshots
+    written to project directory
 ```
 
 Each cycle either accepts the output, asks the generator to fix specific issues, replans from scratch, or escalates to you when human judgment is required.
