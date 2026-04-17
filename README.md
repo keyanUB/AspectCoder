@@ -20,26 +20,21 @@ AspectCoder wraps generation in a structured multi-agent review loop. A dedicate
 
 ```mermaid
 flowchart TD
-    A([Task description]) --> B[Planner]
-    B --> C{PlanVerifier}
-    C -- reject --> B
-    C -- approve --> D[Generator]
-    D --> E[Functional reviewer]
-
-    E -- fail --> AGG
-    E -- pass --> F
-
-    subgraph F[Parallel]
-        G[Security reviewer\nCWE Top 25 / OWASP SCP]
-        H[Performance reviewer]
-    end
-
-    F --> AGG[Aggregator]
-
-    AGG -- REGEN + feedback --> D
-    AGG -- REPLAN --> B
-    AGG -- HUMAN --> HU([Escalate to user])
-    AGG -- DONE --> OUT([Generated files\nper-attempt snapshots\nwritten to project])
+    A([Task Description]) --> B[Planner]
+    B --> C[PlanVerifier]
+    C -->|reject, up to 3x| B
+    C -->|approve| D[Generator]
+    D --> E[Functional Reviewer]
+    E -->|fail| AGG[Aggregator]
+    E -->|pass| SEC["Security Reviewer
+    CWE Top 25 / OWASP SCP"]
+    E -->|pass| PERF[Performance Reviewer]
+    SEC --> AGG
+    PERF --> AGG
+    AGG -->|REGEN + feedback| D
+    AGG -->|REPLAN| B
+    AGG -->|HUMAN| HU([Escalate to user])
+    AGG -->|DONE| OUT([Generated files written to project])
 ```
 
 Each cycle either accepts the output, asks the generator to fix specific issues, replans from scratch, or escalates to you when human judgment is required.
