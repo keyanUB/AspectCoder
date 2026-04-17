@@ -18,40 +18,28 @@ AspectCoder wraps generation in a structured multi-agent review loop. A dedicate
 
 ## How it works
 
-```
-  Task description
-        │
-        ▼
-    Planner ◄──────────────────────────────────────┐
-        │                                           │
-        ▼                                           │
-  PlanVerifier ── reject ──► (replan, max 3)       │
-        │ approve                                   │
-        ▼                                           │
-    Generator ◄── retry feedback ──────────────┐   │
-        │                                       │   │
-        ▼                                       │   │
-  ┌─────────────────────────────────────────┐   │   │
-  │  Functional reviewer                    │   │   │
-  │            │ pass                       │   │   │
-  │            ▼                            │   │   │
-  │  ┌──────────────────────────────────┐   │   │   │
-  │  │  Security reviewer   (parallel)  │   │   │   │
-  │  │    ◄── CWE Top 25 / OWASP SCP   │   │   │   │
-  │  │  Performance reviewer            │   │   │   │
-  │  └──────────────────────────────────┘   │   │   │
-  └─────────────────────────────────────────┘   │   │
-        │                                       │   │
-        ▼                                       │   │
-    Aggregator                                  │   │
-        ├── REGEN  ──────────────────────────┘   │
-        ├── REPLAN ──────────────────────────────┘
-        ├── HUMAN  ──► escalate to user
-        └── DONE
-              │
-              ▼
-    Generated files + per-attempt snapshots
-    written to project directory
+```mermaid
+flowchart TD
+    A([Task description]) --> B[Planner]
+    B --> C{PlanVerifier}
+    C -- reject --> B
+    C -- approve --> D[Generator]
+    D --> E[Functional reviewer]
+
+    E -- fail --> AGG
+    E -- pass --> F
+
+    subgraph F[Parallel]
+        G[Security reviewer\nCWE Top 25 / OWASP SCP]
+        H[Performance reviewer]
+    end
+
+    F --> AGG[Aggregator]
+
+    AGG -- REGEN + feedback --> D
+    AGG -- REPLAN --> B
+    AGG -- HUMAN --> HU([Escalate to user])
+    AGG -- DONE --> OUT([Generated files\nper-attempt snapshots\nwritten to project])
 ```
 
 Each cycle either accepts the output, asks the generator to fix specific issues, replans from scratch, or escalates to you when human judgment is required.
