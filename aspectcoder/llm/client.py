@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 import litellm
-from mycoder.config import ModelConfig
+from aspectcoder.config import ModelConfig
 
 
 @dataclass
@@ -37,16 +37,25 @@ class LLMClient:
         kwargs: dict = dict(
             model=self.config.model,
             messages=litellm_messages,
-            temperature=self.config.temperature,
             max_tokens=self.config.max_tokens,
         )
+        if not (self.config.model.startswith("claude-") or self.config.model.startswith("gpt-5")):
+            kwargs["temperature"] = self.config.temperature
         if response_format:
             kwargs["response_format"] = response_format
 
         result = litellm.completion(**kwargs)
 
+        content = result.choices[0].message.content or ""
+        if not content:
+            raise ValueError(
+                f"Model {result.model} returned empty content "
+                f"(usage: {result.usage}). "
+                "This often happens when a reasoning model exhausts its token budget on internal thinking. "
+                "Increase max_tokens in config.yaml."
+            )
         return LLMResponse(
-            content=result.choices[0].message.content,
+            content=content,
             model=result.model,
             usage={
                 "prompt_tokens": result.usage.prompt_tokens or 0,

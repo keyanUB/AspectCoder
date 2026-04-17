@@ -1,5 +1,5 @@
 import pytest
-from mycoder.models.plan import Subtask, Plan
+from aspectcoder.models.plan import Subtask, Plan
 
 
 def test_subtask_requires_fields():

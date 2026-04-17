@@ -3,9 +3,9 @@ import json
 import pytest
 from unittest.mock import patch, MagicMock
 from pydantic import BaseModel
-from mycoder.config import ModelConfig
-from mycoder.llm.base_agent import BaseAgent
-from mycoder.llm.client import LLMResponse
+from aspectcoder.config import ModelConfig
+from aspectcoder.llm.base_agent import BaseAgent
+from aspectcoder.llm.client import LLMResponse, LLMMessage
 
 
 class EchoOutput(BaseModel):
@@ -18,7 +18,7 @@ class EchoAgent(BaseAgent[str, EchoOutput]):
     """Minimal agent for testing — echoes the input."""
 
     def build_messages(self, input: str):
-        return [{"role": "user", "content": input}]
+        return [LLMMessage(role="user", content=input)]
 
     def parse_output(self, raw: str) -> EchoOutput:
         data = json.loads(raw)
@@ -85,7 +85,10 @@ def test_agent_run_retries_on_parse_failure(agent):
         assert output.message == "ok"
         assert mock_call.call_count == 2
         second_call_messages = mock_call.call_args_list[1][0][0]
-        roles = [m["role"] for m in second_call_messages]
+        from aspectcoder.llm.client import LLMMessage
+        assert all(isinstance(m, LLMMessage) for m in second_call_messages), \
+            "Retry messages must be LLMMessage objects, not dicts"
+        roles = [m.role for m in second_call_messages]
         assert "assistant" in roles
         assert roles[-1] == "user"
 
@@ -110,3 +113,27 @@ def test_agent_last_needs_human_false_when_not_requested(agent):
     with patch.object(agent.client, "call", return_value=mock_response):
         agent.run("confident input")
         assert agent.last_needs_human is False
+
+
+def test_agent_strips_markdown_fences(agent):
+    fenced = '```json\n{"message": "fenced", "confidence": 0.9}\n```'
+    mock_response = LLMResponse(
+        content=fenced,
+        model="claude-haiku-4-5",
+        usage={"prompt_tokens": 5, "completion_tokens": 15},
+    )
+    with patch.object(agent.client, "call", return_value=mock_response):
+        output = agent.run("fenced input")
+        assert output.message == "fenced"
+
+
+def test_agent_strips_plain_backtick_fences(agent):
+    fenced = '```\n{"message": "plain", "confidence": 0.8}\n```'
+    mock_response = LLMResponse(
+        content=fenced,
+        model="claude-haiku-4-5",
+        usage={"prompt_tokens": 5, "completion_tokens": 12},
+    )
+    with patch.object(agent.client, "call", return_value=mock_response):
+        output = agent.run("plain fence")
+        assert output.message == "plain"

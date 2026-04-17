@@ -102,11 +102,13 @@ Each agent extends `BaseAgent`, which handles LLM calls, prompt caching, structu
 
 **Output:** `ReviewVerdict` (reviewer: "security")
 
+**Reference standards:** CWE Top 25 Most Dangerous Software Weaknesses and OWASP Secure Coding Practices — every finding should map to one or both.
+
 **Checks:**
-- **C/C++:** buffer overflows, use-after-free, integer overflow, format string bugs, race conditions
-- **Python:** injection risks, unsafe deserialization, insecure defaults
-- **JavaScript:** XSS, prototype pollution, unsafe `eval`, insecure dependencies
-- OWASP Top 10 patterns across all languages
+- **C/C++:** buffer overflows (CWE-787, CWE-125), use-after-free (CWE-416), integer overflow (CWE-190), format string bugs (CWE-134), race conditions (CWE-362)
+- **Python:** injection risks (CWE-78, CWE-89), unsafe deserialization (CWE-502), insecure defaults
+- **JavaScript:** XSS (CWE-79), prototype pollution, unsafe `eval` (CWE-95), insecure dependencies
+- **All languages:** improper input validation (CWE-20), hard-coded credentials (CWE-798), missing authentication (CWE-306), other OWASP Top 10 violations
 
 **Behaviour:**
 - Runs in parallel with Performance Reviewer (only if Functional passes)

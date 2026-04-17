@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class JobStatus(str, Enum):
@@ -10,6 +10,13 @@ class JobStatus(str, Enum):
     WAITING = "waiting"
     DONE    = "done"
     FAILED  = "failed"
+
+
+class VerdictRecord(BaseModel):
+    version: int
+    reviewer: str
+    pass_: bool
+    issues: list[str] = Field(default_factory=list)
 
 
 class JobState(BaseModel):
@@ -22,3 +29,4 @@ class JobState(BaseModel):
     replan_retries: int = 0
     created_at: datetime
     updated_at: datetime
+    verdicts: list[VerdictRecord] = Field(default_factory=list)

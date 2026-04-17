@@ -1,5 +1,5 @@
 import pytest
-from mycoder.config import ModelConfig, load_config
+from aspectcoder.config import ModelConfig, load_config
 
 FULL_CONFIG_YAML = """
 models:

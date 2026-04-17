@@ -1,10 +1,58 @@
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
-.pytest_cache/
-.DS_Store
+*.pyd
+*.so
+*.egg
 *.egg-info/
 dist/
+build/
+.eggs/
+wheels/
+
+# Virtual environments
 .venv/
-.mycoder/
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# AspectCoder runtime data (job snapshots, reports)
+.aspectcoder/
+reports/
+
+# Generated code output written by aspectcoder run
+# Remove these lines if you want to track generated outputs in your repo
+src/
+
+# Config — keep config.yaml (uses ${ENV_VAR} references, no secrets)
+# Never commit a file with real API keys pasted in
+*.local.yaml
+
+# Secrets / environment variables
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Claude Code / Superpowers plugin state
+.claude/
 .superpowers/

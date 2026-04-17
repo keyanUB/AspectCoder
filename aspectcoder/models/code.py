@@ -10,3 +10,8 @@ class GeneratedCode(BaseModel):
     explanation: str
     confidence: float = Field(ge=0.0, le=1.0)
     needs_human: bool = False
+
+
+class GenerationResult(BaseModel):
+    subtasks: list[GeneratedCode]
+    needs_human: bool = False

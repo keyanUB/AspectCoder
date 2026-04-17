@@ -3,20 +3,37 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mycoder"
+name = "aspectcoder"
 version = "0.1.0"
+description = "Local multi-agent coding assistant powered by LLMs"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Keyan Guo", email = "keyanguo@buffalo.edu" }]
 requires-python = ">=3.11"
+keywords = ["llm", "agents", "code-generation", "cli"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "litellm>=1.40.0",
     "pydantic>=2.0",
     "pyyaml>=6.0",
     "typer>=0.12.0",
-    "fastapi>=0.111.0",
-    "uvicorn>=0.29.0",
 ]
 
 [project.scripts]
-mycoder = "mycoder.cli:app"
+aspectcoder = "aspectcoder.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/keyanguo/AspectCoder"
+Repository = "https://github.com/keyanguo/AspectCoder"
+"Bug Tracker" = "https://github.com/keyanguo/AspectCoder/issues"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

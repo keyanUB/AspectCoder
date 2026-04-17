@@ -1,5 +1,5 @@
 import pytest
-from mycoder.models.code import GeneratedCode
+from aspectcoder.models.code import GeneratedCode
 
 def test_generated_code_valid():
     gc = GeneratedCode(

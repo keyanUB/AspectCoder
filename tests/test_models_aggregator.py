@@ -1,6 +1,6 @@
 import pytest
-from mycoder.models.verdict import ReviewVerdict, ReviewerType
-from mycoder.models.aggregator import (
+from aspectcoder.models.verdict import ReviewVerdict, ReviewerType
+from aspectcoder.models.aggregator import (
     AttemptSummary, FailureReport, AggregatorAction, AggregatorDecision
 )
 

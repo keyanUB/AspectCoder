@@ -1,14 +1,22 @@
 from __future__ import annotations
+import re
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
-from mycoder.config import ModelConfig
-from mycoder.llm.client import LLMClient, LLMMessage
+from aspectcoder.config import ModelConfig
+from aspectcoder.llm.client import LLMClient, LLMMessage
 
 InputT  = TypeVar("InputT")
 OutputT = TypeVar("OutputT")
 
 # Retries after the first attempt; total attempts = MAX_PARSE_RETRIES + 1
 MAX_PARSE_RETRIES = 2
+
+_FENCE_RE = re.compile(r"^```(?:json)?\s*\n?(.*?)\n?```\s*$", re.DOTALL)
+
+
+def _strip_fences(raw: str) -> str:
+    m = _FENCE_RE.match(raw.strip())
+    return m.group(1).strip() if m else raw
 
 
 class BaseAgent(ABC, Generic[InputT, OutputT]):
@@ -25,14 +33,14 @@ class BaseAgent(ABC, Generic[InputT, OutputT]):
         for attempt in range(MAX_PARSE_RETRIES + 1):
             response = self.client.call(messages, cached_prefix=cached_prefix)
             try:
-                output = self.parse_output(response.content)
+                output = self.parse_output(_strip_fences(response.content))
                 self.last_needs_human = getattr(output, "needs_human", False)
                 return output
             except Exception as e:
                 last_error = e
                 messages = messages + [
-                    {"role": "assistant", "content": response.content},
-                    {"role": "user", "content": f"That response could not be parsed. Error: {e}. Please respond with valid JSON only."},
+                    LLMMessage(role="assistant", content=response.content),
+                    LLMMessage(role="user", content=f"That response could not be parsed. Error: {e}. Please respond with valid JSON only."),
                 ]
 
         raise ValueError(f"Agent failed to produce parseable output after {MAX_PARSE_RETRIES + 1} attempts. Last error: {last_error}")

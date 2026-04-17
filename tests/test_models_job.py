@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from mycoder.models.job import JobStatus, JobState
+from aspectcoder.models.job import JobStatus, JobState, VerdictRecord
 
 def test_job_status_values():
     assert JobStatus.PENDING  == "pending"
@@ -21,6 +21,27 @@ def test_job_state_defaults():
     assert state.verifier_retries == 0
     assert state.regen_retries == 0
     assert state.replan_retries == 0
+
+def test_job_state_has_empty_verdicts_by_default():
+    now = datetime.now(timezone.utc)
+    state = JobState(
+        job_id="j1",
+        task_description="task",
+        status=JobStatus.PENDING,
+        current_version=0,
+        created_at=now,
+        updated_at=now,
+    )
+    assert state.verdicts == []
+
+
+def test_verdict_record_stores_reviewer_result():
+    record = VerdictRecord(version=1, reviewer="security", pass_=False, issues=["buffer overflow"])
+    assert record.version == 1
+    assert record.reviewer == "security"
+    assert record.pass_ is False
+    assert "buffer overflow" in record.issues
+
 
 def test_job_state_serialises():
     now = datetime.now(timezone.utc)

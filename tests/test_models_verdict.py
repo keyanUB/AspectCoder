@@ -1,5 +1,5 @@
 import pytest
-from mycoder.models.verdict import (
+from aspectcoder.models.verdict import (
     Issue, IssueSeverity, PlanVerdict, ReviewVerdict, ReviewerType
 )
 
