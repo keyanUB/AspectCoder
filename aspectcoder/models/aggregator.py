@@ -2,11 +2,13 @@ from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel
 from aspectcoder.models.verdict import ReviewVerdict
+from aspectcoder.models.code import GenerationResult
 
 
 class AttemptSummary(BaseModel):
     attempt_number: int
     verdicts: list[ReviewVerdict]
+    generated_code: GenerationResult | None = None
 
 
 class FailureReport(BaseModel):

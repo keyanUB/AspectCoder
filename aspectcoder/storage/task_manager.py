@@ -12,6 +12,7 @@ from aspectcoder.storage.snapshot import (
     write_plan,
     write_plan_verdict,
     write_code,
+    write_verdicts,
     write_state,
     read_plan,
 )
@@ -87,6 +88,35 @@ class TaskManager:
 
         write_code(version_dir, generated)
         return self._save(state.model_copy(update={"current_version": new_version}))
+
+    def snapshot_attempt(
+        self, state: JobState, generated: GenerationResult, verdicts: list[ReviewVerdict]
+    ) -> JobState:
+        new_version = state.current_version + 1
+        version_dir = self._version_dir(state.job_id, new_version)
+
+        prev_version_dir = self._version_dir(state.job_id, state.current_version)
+        if (prev_version_dir / "plan.json").exists():
+            plan = read_plan(prev_version_dir)
+            write_plan(version_dir, plan)
+
+        write_code(version_dir, generated)
+        write_verdicts(version_dir, verdicts)
+
+        records = [
+            VerdictRecord(
+                version=new_version,
+                reviewer=v.reviewer.value,
+                pass_=v.pass_,
+                issues=[issue.description for issue in v.issues],
+            )
+            for v in verdicts
+        ]
+        updated_verdicts = list(state.verdicts) + records
+        return self._save(state.model_copy(update={
+            "current_version": new_version,
+            "verdicts": updated_verdicts,
+        }))
 
     def add_verdict(self, state: JobState, verdict: ReviewVerdict) -> JobState:
         record = VerdictRecord(

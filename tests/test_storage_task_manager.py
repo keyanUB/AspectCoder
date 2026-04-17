@@ -5,7 +5,7 @@ import pytest
 from aspectcoder.storage.task_manager import TaskManager
 from aspectcoder.storage.snapshot import read_state, read_plan
 from aspectcoder.models.plan import Plan, Subtask
-from aspectcoder.models.verdict import PlanVerdict, ReviewVerdict, ReviewerType
+from aspectcoder.models.verdict import PlanVerdict, ReviewVerdict, ReviewerType, Issue, IssueSeverity
 from aspectcoder.models.code import GenerationResult, GeneratedCode
 from aspectcoder.models.job import JobStatus
 
@@ -129,6 +129,55 @@ def test_snapshot_code_copies_current_plan_for_reference(manager, sample_plan, s
     state = manager.snapshot_code(state, sample_generation)
     job_dir = manager.jobs_dir / state.job_id
     assert (job_dir / "v2" / "plan.json").exists()
+
+
+# ── snapshot_attempt ─────────────────────────────────────────────────────────
+
+def test_snapshot_attempt_increments_version(manager, sample_plan, sample_generation):
+    state = manager.create_job("task")
+    state = manager.snapshot_plan(state, sample_plan)
+    verdict = ReviewVerdict(reviewer=ReviewerType.FUNCTIONAL, pass_=True, confidence=0.9)
+    state = manager.snapshot_attempt(state, sample_generation, [verdict])
+    assert state.current_version == 2
+
+
+def test_snapshot_attempt_saves_code_files(manager, sample_plan, sample_generation):
+    state = manager.create_job("task")
+    state = manager.snapshot_plan(state, sample_plan)
+    verdict = ReviewVerdict(reviewer=ReviewerType.FUNCTIONAL, pass_=True, confidence=0.9)
+    state = manager.snapshot_attempt(state, sample_generation, [verdict])
+    job_dir = manager.jobs_dir / state.job_id
+    assert (job_dir / "v2" / "code" / "src" / "utils.c").exists()
+
+
+def test_snapshot_attempt_saves_verdicts_json(manager, sample_plan, sample_generation):
+    state = manager.create_job("task")
+    state = manager.snapshot_plan(state, sample_plan)
+    issue = Issue(
+        severity=IssueSeverity.MAJOR,
+        description="Missing null check",
+        location="utils.c:5",
+        suggestion="Add null guard",
+    )
+    verdict = ReviewVerdict(reviewer=ReviewerType.SECURITY, pass_=False, confidence=0.7, issues=[issue])
+    state = manager.snapshot_attempt(state, sample_generation, [verdict])
+    job_dir = manager.jobs_dir / state.job_id
+    verdicts_file = job_dir / "v2" / "verdicts.json"
+    assert verdicts_file.exists()
+    data = json.loads(verdicts_file.read_text())
+    assert data[0]["reviewer"] == "security"
+    assert data[0]["issues"][0]["description"] == "Missing null check"
+    assert data[0]["issues"][0]["severity"] == "major"
+    assert data[0]["issues"][0]["suggestion"] == "Add null guard"
+
+
+def test_snapshot_attempt_appends_verdicts_to_state(manager, sample_plan, sample_generation):
+    state = manager.create_job("task")
+    state = manager.snapshot_plan(state, sample_plan)
+    verdict = ReviewVerdict(reviewer=ReviewerType.PERFORMANCE, pass_=False, confidence=0.6)
+    state = manager.snapshot_attempt(state, sample_generation, [verdict])
+    assert len(state.verdicts) == 1
+    assert state.verdicts[0].reviewer == "performance"
 
 
 # ── add_verdict ───────────────────────────────────────────────────────────────

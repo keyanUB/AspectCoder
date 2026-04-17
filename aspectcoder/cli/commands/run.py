@@ -91,11 +91,8 @@ def run_command(
         result = orchestrator.run(task_description, codebase_context="")
 
         state = tm.snapshot_plan(state, result.plan)
-        state = tm.snapshot_code(state, result.generated_code)
-
         for attempt in result.all_attempts:
-            for verdict in attempt.verdicts:
-                state = tm.add_verdict(state, verdict)
+            state = tm.snapshot_attempt(state, attempt.generated_code, attempt.verdicts)
 
         state = tm.complete_job(state)
 
@@ -104,7 +101,10 @@ def run_command(
             typer.echo(f"  wrote {path}")
 
         job_dir = tm.job_dir(state.job_id)
-        write_report(job_dir, state, result.plan, result.generated_code, result.decision, project_root=Path.cwd())
+        write_report(
+            job_dir, state, result.plan, result.generated_code, result.decision,
+            project_root=Path.cwd(), all_attempts=result.all_attempts,
+        )
 
         typer.echo(f"✓ Done  · job {state.job_id} · {len(written)} file(s) written")
 

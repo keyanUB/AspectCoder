@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from aspectcoder.models.plan import Plan
-from aspectcoder.models.verdict import PlanVerdict
+from aspectcoder.models.verdict import PlanVerdict, ReviewVerdict
 from aspectcoder.models.code import GenerationResult
 from aspectcoder.models.job import JobState
 
@@ -24,6 +24,12 @@ def write_code(version_dir: Path, generated: GenerationResult) -> None:
         dest = code_dir / subtask.file_path
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(subtask.code)
+
+
+def write_verdicts(version_dir: Path, verdicts: list[ReviewVerdict]) -> None:
+    version_dir.mkdir(parents=True, exist_ok=True)
+    payload = [v.model_dump() for v in verdicts]
+    (version_dir / "verdicts.json").write_text(json.dumps(payload, indent=2, default=str))
 
 
 def write_output_files(generated: GenerationResult, project_root: Path) -> list[str]:

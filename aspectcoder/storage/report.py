@@ -4,7 +4,7 @@ from pathlib import Path
 from aspectcoder.models.job import JobState
 from aspectcoder.models.plan import Plan
 from aspectcoder.models.code import GenerationResult
-from aspectcoder.models.aggregator import AggregatorDecision
+from aspectcoder.models.aggregator import AggregatorDecision, AttemptSummary
 
 
 def write_report(
@@ -14,6 +14,7 @@ def write_report(
     generated: GenerationResult,
     decision: AggregatorDecision,
     project_root: Path | None = None,
+    all_attempts: list[AttemptSummary] | None = None,
 ) -> Path:
     regen_count = state.regen_retries
     regen_note = f"{regen_count} regeneration{'s' if regen_count != 1 else ''}" if regen_count else "no regenerations"
@@ -49,6 +50,23 @@ def write_report(
         if review_rows else "_No verdicts recorded._"
     )
 
+    detail_section = ""
+    if all_attempts:
+        lines = ["## Review Detail\n"]
+        for attempt in all_attempts:
+            lines.append(f"### Attempt {attempt.attempt_number}\n")
+            for v in attempt.verdicts:
+                status = "Pass" if v.pass_ else "Fail"
+                lines.append(f"**{v.reviewer.value.capitalize()}** — {status} (confidence: {v.confidence:.0%})\n")
+                for issue in v.issues:
+                    loc = f" `{issue.location}`" if issue.location else ""
+                    lines.append(f"- **[{issue.severity.value.upper()}]**{loc} {issue.description}")
+                    lines.append(f"  - *Suggestion:* {issue.suggestion}")
+                if not v.issues:
+                    lines.append("_No issues._")
+                lines.append("")
+        detail_section = "\n".join(lines) + "\n"
+
     content = f"""\
 # AspectCoder Run Report — {state.job_id}
 
@@ -62,7 +80,7 @@ def write_report(
 ## Review Summary
 {review_table}
 
-{issues_section}## Versions
+{issues_section}{detail_section}## Versions
 {versions_section}
 """
 

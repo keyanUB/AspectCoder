@@ -6,7 +6,8 @@ from aspectcoder.storage.report import write_report
 from aspectcoder.models.job import JobState, JobStatus, VerdictRecord
 from aspectcoder.models.plan import Plan, Subtask
 from aspectcoder.models.code import GenerationResult, GeneratedCode
-from aspectcoder.models.aggregator import AggregatorDecision, AggregatorAction
+from aspectcoder.models.aggregator import AggregatorDecision, AggregatorAction, AttemptSummary
+from aspectcoder.models.verdict import ReviewVerdict, ReviewerType, Issue, IssueSeverity
 
 
 @pytest.fixture
@@ -95,6 +96,33 @@ def test_report_shows_version_count(tmp_path, sample_state, sample_plan, sample_
     content = report_path.read_text()
     assert "v1" in content
     assert "v2" in content
+
+
+def test_report_shows_issue_severity_location_and_suggestion(tmp_path, sample_state, sample_plan, sample_generation):
+    attempts = [AttemptSummary(
+        attempt_number=1,
+        verdicts=[ReviewVerdict(
+            reviewer=ReviewerType.SECURITY,
+            pass_=False,
+            confidence=0.6,
+            issues=[Issue(
+                severity=IssueSeverity.CRITICAL,
+                description="SQL injection risk",
+                location="app.py:10",
+                suggestion="Use parameterized queries",
+            )],
+        )],
+        generated_code=sample_generation,
+    )]
+    decision = AggregatorDecision(action=AggregatorAction.DONE, summary="Fixed.")
+    report_path = write_report(
+        tmp_path, sample_state, sample_plan, sample_generation, decision, all_attempts=attempts
+    )
+    content = report_path.read_text()
+    assert "SQL injection risk" in content
+    assert "app.py:10" in content
+    assert "Use parameterized queries" in content
+    assert "critical" in content.lower()
 
 
 def test_write_report_copies_to_reports_dir(tmp_path, sample_state, sample_plan, sample_generation):

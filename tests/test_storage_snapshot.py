@@ -7,13 +7,14 @@ from aspectcoder.storage.snapshot import (
     write_plan,
     write_plan_verdict,
     write_code,
+    write_verdicts,
     write_output_files,
     write_state,
     read_state,
     read_plan,
 )
 from aspectcoder.models.plan import Plan, Subtask
-from aspectcoder.models.verdict import PlanVerdict
+from aspectcoder.models.verdict import PlanVerdict, ReviewVerdict, ReviewerType, Issue, IssueSeverity
 from aspectcoder.models.code import GenerationResult, GeneratedCode
 from aspectcoder.models.job import JobState, JobStatus
 
@@ -178,6 +179,44 @@ def test_write_output_files_multiple_subtasks(tmp_path):
     assert set(written) == {"src/foo.py", "tests/test_foo.py"}
     assert (tmp_path / "src" / "foo.py").exists()
     assert (tmp_path / "tests" / "test_foo.py").exists()
+
+
+# ── write_verdicts ────────────────────────────────────────────────────────────
+
+def test_write_verdicts_creates_verdicts_json(tmp_path):
+    verdicts = [ReviewVerdict(reviewer=ReviewerType.SECURITY, pass_=True, confidence=0.9)]
+    version_dir = tmp_path / "v1"
+    write_verdicts(version_dir, verdicts)
+    assert (version_dir / "verdicts.json").exists()
+
+
+def test_write_verdicts_stores_full_issue_details(tmp_path):
+    verdicts = [ReviewVerdict(
+        reviewer=ReviewerType.SECURITY,
+        pass_=False,
+        confidence=0.6,
+        issues=[Issue(
+            severity=IssueSeverity.CRITICAL,
+            description="SQL injection risk",
+            location="app.py:42",
+            suggestion="Use parameterized queries",
+        )],
+    )]
+    version_dir = tmp_path / "v1"
+    write_verdicts(version_dir, verdicts)
+    data = json.loads((version_dir / "verdicts.json").read_text())
+    assert data[0]["reviewer"] == "security"
+    assert data[0]["issues"][0]["severity"] == "critical"
+    assert data[0]["issues"][0]["location"] == "app.py:42"
+    assert data[0]["issues"][0]["suggestion"] == "Use parameterized queries"
+
+
+def test_write_verdicts_handles_empty_list(tmp_path):
+    version_dir = tmp_path / "v1"
+    write_verdicts(version_dir, [])
+    assert (version_dir / "verdicts.json").exists()
+    data = json.loads((version_dir / "verdicts.json").read_text())
+    assert data == []
 
 
 # ── read_plan ─────────────────────────────────────────────────────────────────

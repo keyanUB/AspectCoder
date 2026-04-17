@@ -120,7 +120,7 @@ class Orchestrator:
             n_files = len(generated.subtasks)
             self._emit(f"Generated {n_files} file(s). Running reviews...")
             verdicts = self._review_phase(plan, generated)
-            all_attempts.append(AttemptSummary(attempt_number=regen_count + 1, verdicts=verdicts))
+            all_attempts.append(AttemptSummary(attempt_number=regen_count + 1, verdicts=verdicts, generated_code=generated))
 
             for v in verdicts:
                 icon = "✓" if v.pass_ else "✗"
